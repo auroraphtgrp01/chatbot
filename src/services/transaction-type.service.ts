@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const API_URL = 'https://api.uniko.id.vn/api';
-const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmODY4OTJjNC01NjIxLTRmOTEtYmRiZi1lOWQyMzUzMWY3NWIiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImZ1bGxOYW1lIjpudWxsLCJyb2xlSWQiOiJiOGI1ZjM2ZS0xYzRmLTRmMzItYWE1Ni0zZTFjNTkyOTJkNDUiLCJzdGF0dXMiOiJBQ1RJVkUiLCJpYXQiOjE3MzU3NTE2MzgsImV4cCI6MTczNjYxNTYzOH0.Pjp7p7SVpTY-QZW_bn1W6ox-6Vth7tj9zXlSh7W4Qgk';
 
 export interface TransactionType {
   id: string;
@@ -11,13 +10,16 @@ export interface TransactionType {
   trackerType: string;
 }
 
-export async function getTransactionTypes(): Promise<TransactionType[]> {
+export async function getTransactionTypes(
+    token: string,
+    fundId: string
+): Promise<TransactionType[]> {
   try {
     const response = await axios.get(
-      `${API_URL}/tracker-transaction-types/all/b376bb8d-c5ff-476d-b4f3-8f840a12c060`,
+      `${API_URL}/tracker-transaction-types/all/${fundId}`,
       {
         headers: {
-          'Authorization': `Bearer ${ACCESS_TOKEN}`
+          'Authorization': `Bearer ${token}`
         }
       }
     );
@@ -28,8 +30,9 @@ export async function getTransactionTypes(): Promise<TransactionType[]> {
   }
 }
 
-export async function findMatchingCategory(description: string, type: 'EXPENSE' | 'INCOMING'): Promise<TransactionType | null> {
-  const types = await getTransactionTypes();
+export async function findMatchingCategory(description: string, type: 'EXPENSE' | 'INCOMING', token: string,
+    fundId: string): Promise<TransactionType | null> {
+  const types = await getTransactionTypes(token, fundId);
   if (!types.length) return null;
   
   const normalizedDesc = description.toLowerCase();

@@ -1,9 +1,9 @@
-// src/routes/chat.routes.ts
-import { Router } from 'express';
+import express from 'express';
 import { streamChat } from '../controllers/chat.controller';
+import { verifyToken } from '../middlewares/auth.middleware';
 
-const router = Router();
+const router = express.Router();
 
-router.post('/stream', streamChat);
+router.post('/', verifyToken, streamChat);
 
-export { router as ChatRouter };
+export default router; 

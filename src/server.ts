@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ChatRouter } from './routes/chat.routes';
+import router from './routes/chat.routes';
 
 dotenv.config();
 
@@ -18,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/chat', ChatRouter);
+app.use('/chat', router);
 
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại port ${PORT}`);
