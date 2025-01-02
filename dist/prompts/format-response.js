@@ -1,4 +1,7 @@
-export const FORMAT_RESPONSE = `Format trả lời: [Tin nhắn phản hồi ngắn gọn] [Nếu có chi tiêu thì thêm JSON]
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FORMAT_RESPONSE = void 0;
+exports.FORMAT_RESPONSE = `Format trả lời: [Tin nhắn phản hồi ngắn gọn] [Nếu có chi tiêu thì thêm JSON]
 
 Quy tắc phân tích:
 1. Khi một ví được đề cập nhưng không tìm thấy trong hệ thống, tự động sử dụng ví đầu tiên

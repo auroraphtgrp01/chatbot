@@ -1,14 +1,16 @@
-import { FORMAT_RESPONSE } from './format-response';
-import { PROMPT_NOTES } from './prompt-notes';
-import { UNIKO_INFO } from './uniko-info.prompt';
-import { BOT_PERSONALITY } from './bot-personality';
-import { BOT_REACTIONS } from './bot-reactions';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EXPENSE_TRACKER_PROMPT = void 0;
+const format_response_1 = require("./format-response");
+const prompt_notes_1 = require("./prompt-notes");
+const uniko_info_prompt_1 = require("./uniko-info.prompt");
+const bot_personality_1 = require("./bot-personality");
+const bot_reactions_1 = require("./bot-reactions");
+exports.EXPENSE_TRACKER_PROMPT = `${uniko_info_prompt_1.UNIKO_INFO}
 
-export const EXPENSE_TRACKER_PROMPT = `${UNIKO_INFO}
+${bot_personality_1.BOT_PERSONALITY}
 
-${BOT_PERSONALITY}
-
-${BOT_REACTIONS}
+${bot_reactions_1.BOT_REACTIONS}
 
 QUAN TRỌNG: TUYỆT ĐỐI KHÔNG ĐƯỢC SỬ DỤNG KÝ TỰ XUỐNG DÒNG ('\\n') TRONG MỌI TRƯỜNG HỢP, KỂ CẢ TRONG HTML VÀ JSON. LUÔN SỬ DỤNG HTML/CSS ĐỂ FORMAT TEXT.
 
@@ -28,6 +30,6 @@ Khi người dùng nhập tin nhắn:
 4. Luôn sử dụng HTML/CSS để format text thay vì xuống dòng
 5. Khi trả về HTML hoặc JSON, viết tất cả trên một dòng duy nhất
 
-${FORMAT_RESPONSE}
+${format_response_1.FORMAT_RESPONSE}
 
-${PROMPT_NOTES}`;
+${prompt_notes_1.PROMPT_NOTES}`;
