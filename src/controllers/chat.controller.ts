@@ -88,17 +88,23 @@ Hãy sử dụng CHÍNH XÁC:
         try {
             // Kiểm tra xem có phải response dạng HTML không
             if (text.includes('```html') && text.includes('```json')) {
+                console.log('text', text);
+                
                 // Tách HTML và JSON bằng markers
                 const htmlMatch = text.match(/```html(.*?)```/s);
                 const jsonMatch = text.match(/```json(.*?)```/s);
                 
                 if (htmlMatch && jsonMatch) {
-                    // Bỏ markdown wrapper, escaped quotes và cả \n và \\n
+                    // Bỏ markdown wrapper và xử lý HTML content
                     const messageText = htmlMatch[1]
                         .trim()
+                        .replace(/```html|```/g, '')
                         .replace(/\\"/g, '"')
                         .replace(/\\n/g, '')
-                        .replace(/\n/g, '');
+                        .replace(/\n/g, '')
+                        .replace(/<div class=\\"message\\">|<div class=\\"content\\">|<div class=\\"note\\">/g, '')
+                        .replace(/<\/div>/g, '')
+                    
                     const jsonText = jsonMatch[1].trim();
                     
                     // Parse JSON
@@ -151,14 +157,18 @@ Hãy sử dụng CHÍNH XÁC:
             } else {
                 // Xử lý text thông thường
                 // Bỏ tất cả markdown JSON nếu có
-                const cleanText = text.replace(/```json.*?```/gs, '').trim();
-                // Bỏ escaped quotes và cả \n và \\n
-                const unescapedText = cleanText
+                const cleanText = text
+                    .replace(/```json.*?```/gs, '')
+                    .replace(/```html|```/g, '')
+                    .trim()
                     .replace(/\\"/g, '"')
                     .replace(/\\n/g, '')
-                    .replace(/\n/g, '');
+                    .replace(/\n/g, '')
+                    .replace(/<div class=\\"message\\">|<div class=\\"content\\">|<div class=\\"note\\">/g, '')
+                    .replace(/<\/div>/g, '')
+                    .replace(/<br>/g, '\n');
                 res.json({
-                    message: unescapedText,
+                    message: cleanText,
                     data: null
                 });
             }
