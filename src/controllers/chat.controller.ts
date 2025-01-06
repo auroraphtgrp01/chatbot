@@ -2,7 +2,7 @@
 import { RequestHandler } from 'express';
 import { genAI } from '../server';
 import { EXPENSE_TRACKER_PROMPT } from '../prompts/expense-tracker.prompt';
-import { findMatchingCategory } from '../services/transaction-type.service';
+import { findMatchingCategory, getTransactionTypes } from '../services/transaction-type.service';
 import { HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { AuthRequest, ChatRequest } from '../middlewares/auth.middleware';
 import { getWallets, Wallet } from '../services/wallet.service';
@@ -16,8 +16,11 @@ export const streamChat: RequestHandler<{}, {}, ChatRequest> = async (
         const user = (req as AuthRequest).user;
         const token = req.headers.authorization?.split(' ')[1] || '';
 
-        // Lấy danh sách ví
-        const wallets = await getWallets(fundId, token);
+        // Lấy danh sách ví và loại giao dịch
+        const [wallets, transactionTypes] = await Promise.all([
+            getWallets(fundId, token),
+            getTransactionTypes(token, fundId)
+        ]);
 
         if (!message) {
             res.status(400).json({ error: 'Tin nhắn không được để trống' });
@@ -59,7 +62,25 @@ export const streamChat: RequestHandler<{}, {}, ChatRequest> = async (
             }
         });
 
-        await chat.sendMessage(EXPENSE_TRACKER_PROMPT);
+        console.debug('wallets', wallets);
+        // Thêm thông tin về wallets, categories và transaction types vào prompt
+        const promptWithContext = `${EXPENSE_TRACKER_PROMPT}
+
+Danh sách ví trong hệ thống:
+${JSON.stringify(wallets.map(w => ({
+    id: w.id,
+    name: w.name
+})), null, 2)}
+
+Danh sách categories và transaction types:
+${JSON.stringify(transactionTypes, null, 2)}
+
+Hãy sử dụng CHÍNH XÁC:
+1. ID và tên ví từ danh sách wallets ở trên
+2. Categories từ danh sách transaction types
+3. Luôn thêm accountSourceId vào mỗi transaction dựa theo walletName`;
+        
+        await chat.sendMessage(promptWithContext);
         const result = await chat.sendMessage(message);
         const response = await result.response;
         const text = response.text();
@@ -72,7 +93,12 @@ export const streamChat: RequestHandler<{}, {}, ChatRequest> = async (
                 const jsonMatch = text.match(/```json(.*?)```/s);
                 
                 if (htmlMatch && jsonMatch) {
-                    const messageText = htmlMatch[1].trim();
+                    // Bỏ markdown wrapper, escaped quotes và cả \n và \\n
+                    const messageText = htmlMatch[1]
+                        .trim()
+                        .replace(/\\"/g, '"')
+                        .replace(/\\n/g, '')
+                        .replace(/\n/g, '');
                     const jsonText = jsonMatch[1].trim();
                     
                     // Parse JSON
@@ -111,22 +137,41 @@ export const streamChat: RequestHandler<{}, {}, ChatRequest> = async (
                         data: data
                     });
                 } else {
+                    // Bỏ markdown wrapper, escaped quotes và cả \n và \\n
+                    const cleanText = text
+                        .replace(/```html\n|\n```/g, '')
+                        .replace(/\\"/g, '"')
+                        .replace(/\\n/g, '')
+                        .replace(/\n/g, '');
                     res.json({
-                        message: text,
+                        message: cleanText,
                         data: null
                     });
                 }
             } else {
-                // Nếu không phải response có HTML/JSON
+                // Xử lý text thông thường
+                // Bỏ tất cả markdown JSON nếu có
+                const cleanText = text.replace(/```json.*?```/gs, '').trim();
+                // Bỏ escaped quotes và cả \n và \\n
+                const unescapedText = cleanText
+                    .replace(/\\"/g, '"')
+                    .replace(/\\n/g, '')
+                    .replace(/\n/g, '');
                 res.json({
-                    message: text,
+                    message: unescapedText,
                     data: null
                 });
             }
         } catch (error) {
+            // Nếu có lỗi parse, trả về text gốc
+            const cleanText = text
+                .replace(/```json.*?```/gs, '')
+                .trim()
+                .replace(/\\n/g, '')
+                .replace(/\n/g, '');
             console.error('Parse error:', error);
             res.json({
-                message: text,
+                message: cleanText,
                 data: null
             });
         }

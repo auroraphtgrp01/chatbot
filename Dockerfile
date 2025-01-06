@@ -1,21 +1,22 @@
 # Sử dụng node image làm base
 FROM node:20-slim
 
+# Cài đặt corepack và enable yarn
 RUN corepack enable
 
+# Thiết lập thư mục làm việc
 WORKDIR /app
 
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY tsconfig.json ./
-COPY .yarn ./.yarn
+# Copy toàn bộ code và file cấu hình
+COPY . .
 
+# Cài đặt dependencies
 RUN yarn install
 
-COPY . .
-RUN rm -rf src
-
+# Build ứng dụng
 RUN yarn build
 
+# Expose port mà Express sẽ chạy
 EXPOSE 3000
 
 # Khởi chạy ứng dụng

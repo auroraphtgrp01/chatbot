@@ -5,11 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: auroraphtgrp/chatbot-uniko-llm
     ports:
       - "3000:3000"
-    volumes:
-      - ./src:/app/src
-      - ./.env:/app/.env
     environment:
       - NODE_ENV=development
     restart: unless-stopped
